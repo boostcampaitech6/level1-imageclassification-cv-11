@@ -18,10 +18,10 @@ def start_server(kind: str) -> None:
 
     if kind == 'redis':
         # 설정 파일 복사/붙여넣기
-        start_subprocess(f'cp {env.CWD}/cnf/redis.conf /etc/redis.conf')
+        start_subprocess(f'cp {env.CWD}/gpu_pool/cnf/redis.conf /etc/redis.conf')
     else:
         # 설정 파일 복사/붙여넣기
-        start_subprocess(f'cp {env.CWD}/cnf/mysqld.cnf /etc/mysql/mysql.conf.d/mysqld.cnf')
+        start_subprocess(f'cp {env.CWD}/gpu_pool/cnf/mysqld.cnf /etc/mysql/mysql.conf.d/mysqld.cnf')
 
     # server 서버 실행
     print(f'{kind_fn} 실행 중...')
@@ -32,16 +32,16 @@ def start_server(kind: str) -> None:
 
 def check_config(kind: str) -> None:
     if kind == 'redis':
-        config_dir = f'{env.CWD}/cnf/redis.conf'
-        port = env.PUBLISH_REDIS_PORT
+        config_dir = f'{env.CWD}/gpu_pool/cnf/redis.conf'
+        port = f'\nport {env.PUBLISH_REDIS_PORT}'
     else:
-        config_dir = f'{env.CWD}/cnf/mysqld.cnf'
-        port = env.PUBLISH_MYSQL_PORT
+        config_dir = f'{env.CWD}/gpu_pool/cnf/mysqld.cnf'
+        port = f'\nport = {env.PUBLISH_MYSQL_PORT}'
 
     with open(config_dir, 'r') as file:
         if file.readlines()[-1] == '##':
             with open(config_dir, 'a') as file:
-                file.write(f'\nport {port}')
+                file.write(port)
 
 
 def check_installation(kind: str) -> None:
