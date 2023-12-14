@@ -5,6 +5,8 @@ import json
 import mysql_query
 from utils import start_server
 
+MESSAGE_ID_INDEX = 0
+
 redis_client = redis.Redis(host=env.PUBLISH_IP, port=env.PUBLISH_REDIS_PORT, db=0)
 
 def publish_tasks():
@@ -26,7 +28,7 @@ def publish_tasks():
         for message in mysql_query.select_publisher():
 
             # message의 id 추출
-            message_id = message[0]
+            message_id = message[MESSAGE_ID_INDEX]
 
             # mysql에서 message의 pushed를 1로 변경
             # mysql_query.update_message(message_id)
