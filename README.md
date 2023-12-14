@@ -88,7 +88,8 @@ nohup python gpu_pool --mode 1 &
 ```
 
 #### Consumer
-
+- 첫 실행은 foreground로 하여 반복되는 git checkout 작업을 위해 git 아이디와 액세스 토큰을 입력해야 합니다. 아이디와 액세스 토큰은 11일 동안 캐싱 됩니다. 이 기간 동안 background 실행이 가능합니다.
+- 11일이 지난 이후엔 다시 foreground로 실행하여 아이디와 액세스 토큰을 입력해야 합니다.
 ```
 # foreground
 python gpu_pool
@@ -131,7 +132,7 @@ MESSAGE_FILE_DIR = './message.json'
   "epoch": "1",
   "dataset": "MaskBaseDataset",
   "augmentation": "BaseAugmentation",
-  "resize": "128, 96",
+  "resize": "128 96",
   "batch_size": "64",
   "valid_batch_size": "1000",
   "model": "BaseModel",

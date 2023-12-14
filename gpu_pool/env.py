@@ -22,7 +22,7 @@ MESSAGE_FILE_DIR = 'file_dir' # ex) './message.json' or f'{CWD}/message.json'
 #   "epoch": "1",
 #   "dataset": "MaskBaseDataset",
 #   "augmentation": "BaseAugmentation",
-#   "resize": "128, 96",
+#   "resize": "128 96",
 #   "batch_size": "64",
 #   "valid_batch_size": "1000",
 #   "model": "BaseModel",
