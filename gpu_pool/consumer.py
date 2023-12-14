@@ -27,7 +27,7 @@ def consume_messages():
     # consumer 작업 실행
     print('consumer 작업 실행')
     while True:
-
+        print('작업 새로고침')
         # redis-server에 연결
         pubsub = redis_client.pubsub()
 
@@ -60,7 +60,7 @@ def consume_messages():
             if train.stderr:
                 mysql_query.insert_error_log(message_id, train.stderr)
 
-        time.sleep(10)
+        time.sleep(60)
     
 
 if __name__ == "__main__":

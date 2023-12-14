@@ -20,6 +20,7 @@ def publish_tasks():
     # publish 작업 실행
     print("publisher 작업 실행")
     while True:
+        print('작업 새로고침')
         # mysql db에서 새로 업로드 된 메시지들을 확인
         for message in mysql_query.select_publisher():
 
@@ -32,7 +33,7 @@ def publish_tasks():
             # redis 큐에 message_id 추가
             redis_client.publish(env.QUEUE_NAME, message_id)
 
-        time.sleep(10)
+        time.sleep(60)
 
 if __name__ == "__main__":
     publish_tasks()
