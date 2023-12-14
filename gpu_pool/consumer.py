@@ -5,9 +5,11 @@ import env
 import mysql_query
 from utils import start_subprocess, check_installation
 
+redis_client = redis.Redis(host=env.PUBLISH_IP, port=env.PUBLISH_REDIS_PORT, db=0)
+# , health_check_interval = 59
+
 def consume_messages():
     # Redis 연결 설정
-    redis_client = redis.Redis(host=env.PUBLISH_IP, port=env.PUBLISH_REDIS_PORT, db=0)
 
     # python module check
     check_installation('git')
@@ -35,30 +37,42 @@ def consume_messages():
         pubsub.subscribe(env.QUEUE_NAME)
 
         # 메시지 pop
-        message = pubsub.get_message()
-        if message['type'] == 'message':
-            message_id = json.loads(message['data'])
+        for message in pubsub.listen():
+            if message and message['type'] =='subscribe':
+                continue
 
-            #0:id, 1:branch, 2:name, 3:seed, 4:epoch, 5:dataset, 6:augmentation
-            #7:resize, 8:batch_size, 9:valid_batch_size, 10:model, 11:optimizer
-            #12:lr, 13:val_ratio, 14:criterion, 15:lr_decay_step, 16:log_interval
-            #17:patience, 18:data_dir, 19:model_dir
-            args_value = mysql_query.select_consumer(message_id)
+            if message and message['type'] == 'message':
+                message_id = json.loads(message['data'])
 
-            branch = args_value[1]
-            repo = git.Repo.init(path=env.CWD)
-            repo.remotes.origin.pull()
-            repo.git.checkout(branch)
-            # repo.remotes.origin.pull()
-            print(f'checkout {branch}')
+                mysql_query.update_message(message_id)
+                # 0:id, 1:branch, 2:name, 3:seed, 4:epoch, 5:dataset, 6:augmentation
+                # 7:resize, 8:batch_size, 9:valid_batch_size, 10:model, 11:optimizer
+                # 12:lr, 13:val_ratio, 14:criterion, 15:lr_decay_step, 16:log_interval
+                # 17:patience, 18:data_dir, 19:model_dir
+                args_value = mysql_query.select_consumer(message_id)
 
-            args = ''
-            for idx, name in enumerate(args_name):
-                args += f'--{name} {args_value[idx]} '
+                branch = args_value[1]
+                repo = git.Repo.init(path=env.CWD)
+                repo.remotes.origin.pull()
+                repo.git.checkout(branch)
+                # repo.remotes.origin.pull()
+                print(f'checkout {branch}')
 
-            train = start_subprocess(f'python {env.CWD}/train.py {args}')
-            if train.stderr:
-                mysql_query.insert_error_log(message_id, train.stderr)
+                args = ''
+                for idx, name in enumerate(args_name):
+                    if idx < 2:
+                        continue
+                    args += f'--{name} {args_value[idx]} '
+
+                print('학습 중')
+                train = start_subprocess(f'python {env.CWD}/train.py {args}')
+                if train.stderr:
+                    mysql_query.insert_error_log(message_id, train.stderr)
+                    print(f'학습 중 에러 발생. error_message에서 {message_id}를 참조바랍니다.')
+                else:
+                    print('학습 완료')
+                    
+            break
 
         time.sleep(60)
     
