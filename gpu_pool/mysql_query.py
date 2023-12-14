@@ -39,7 +39,7 @@ def create_table():
         '''create table IF NOT EXISTS error_message(
             id int(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
             message_id int(10) NOT NULL,
-            error_log varchar(255)
+            error_log LONGTEXT
         );'''
         ]
     with conn:
@@ -95,8 +95,8 @@ def update_message(message_id: int) -> None:
 def insert_error_log(message_id:int, error_log:str) -> None:
     conn = pymysql.connect(host=env.PUBLISH_IP,port=env.PUBLISH_MYSQL_PORT, user=env.PUBLISH_MYSQL_USER, password=env.PUBLISH_MYSQL_PASSWORD,db="ai_train", charset='utf8') 
 
-    sql = f'INSERT message (message_id, error_log) VALUES ({message_id}, {error_log})'
+    sql = 'INSERT error_message (message_id, error_log) VALUES (%s, %s)'
     with conn:
         with conn.cursor() as cur:
-            cur.execute(sql)
+            cur.execute(sql, (message_id, error_log))
         conn.commit()
