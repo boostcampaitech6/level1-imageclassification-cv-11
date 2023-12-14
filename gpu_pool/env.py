@@ -7,6 +7,8 @@ CWD = os.getcwd()
 PUBLISH_IP = 'ip_address' # ex)'10.28.224.65'
 PUBLISH_REDIS_PORT = 0 # ex) 30066
 PUBLISH_MYSQL_PORT = 0 # ex) 30067
+PUBLISH_MYSQL_USER = 'user'
+PUBLISH_MYSQL_PASSWORD = 'password'
 
 # redis 큐 이름
 QUEUE_NAME = 'ai_train_queue'
