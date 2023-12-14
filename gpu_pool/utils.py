@@ -72,7 +72,7 @@ def check_installation(kind: str) -> None:
             start_subprocess('apt-get update && apt-get install -y --no-install-recommends')
             start_subprocess('apt-get install -y dialog apt-utils systemctl')
         elif kind == 'mysql-server':
-            print(f'{kind} 는 따로 설치가 필요합니다. 설치 후 user=root/password=\'\'로 외부접속허용 설정이 요구됩니다.')
+            print(f'{kind} 는 따로 설치가 필요합니다. 설치 후 유저 권한 부여와 외부 접속 허용 설정이 요구됩니다.')
             raise Exception(f'{kind} 설치되지 않음')
 
         # 설치 파트

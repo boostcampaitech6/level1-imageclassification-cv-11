@@ -71,7 +71,7 @@ tensorboard --logdir=save_dir
 
 Publisher인 경우:
 - MySQL Server (MySQL >= 5.7)
-  - MySQL Server의 root 유저에게 외부접속을 허용하고 password가 없어야 함.
+  - env.py에 입력한 user -> MySQL Server에서 데이터베이스 접근, 생성 권한을 부여하고 외부 접속을 허용해야 함.
 
 ### Usage
 
@@ -113,6 +113,8 @@ python gpu_pool/push.py
 PUBLISH_IP = '10.28.xxx.xx'
 PUBLISH_REDIS_PORT = 300066
 PUBLISH_MYSQL_PORT = 300067
+PUBLISH_MYSQL_USER = 'user'
+PUBLISH_MYSQL_PASSWORD = 'password'
 
 # 큐 이름
 QUEUE_NAME = 'ai_train_queue'
