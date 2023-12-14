@@ -8,22 +8,17 @@ def start_server(kind: str) -> None:
     if kind not in ['redis', 'mysql']:
         raise Exception('잘못된 입력')
     
-    kind_fn = 'redis-server' if kind == 'redis' else 'mysql-server' # redis or mysql
+    kind_fn = 'redis-server' if kind == 'redis' else 'mysql-server'
 
-    # server 설치 확인
     check_installation(kind=kind_fn)
 
-    # 설정 파일 확인
     check_config(kind=kind)
 
     if kind == 'redis':
-        # 설정 파일 복사/붙여넣기
         start_subprocess(f'cp {env.CWD}/gpu_pool/cnf/redis.conf /etc/redis.conf')
     else:
-        # 설정 파일 복사/붙여넣기
         start_subprocess(f'cp {env.CWD}/gpu_pool/cnf/mysqld.cnf /etc/mysql/mysql.conf.d/mysqld.cnf')
 
-    # server 서버 실행
     print(f'{kind_fn} 실행 중...')
     start = start_subprocess('redis-server /etc/redis.conf') if kind == 'redis' else start_subprocess('service mysql start')
     if start.stderr:
@@ -62,7 +57,6 @@ def check_installation(kind: str) -> None:
     else:
         raise Exception(f'지정오류')
     
-    # 확인 파트
     print(f'{kind} 설치 확인 중...')
     check = start_subprocess(command_c)
     if check.stderr:
@@ -75,7 +69,6 @@ def check_installation(kind: str) -> None:
             print(f'{kind} 는 따로 설치가 필요합니다. 설치 후 유저 권한 부여와 외부 접속 허용 설정이 요구됩니다.')
             raise Exception(f'{kind} 설치되지 않음')
 
-        # 설치 파트
         print(f'{kind} 설치 중...')
         install = start_subprocess(command_i)
         if install.stderr and 'WARNING: Running pip as the \'root\' user can result in broken permissions' not in install.stderr:
