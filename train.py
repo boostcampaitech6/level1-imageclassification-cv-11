@@ -16,6 +16,7 @@ import torch
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
+from sklearn.metrics import f1_score
 
 from dataset import MaskBaseDataset
 from loss import create_criterion
@@ -218,6 +219,8 @@ def train(data_dir, model_dir, args):
             val_loss_items = []
             val_acc_items = []
             figure = None
+            all_labels = []
+            all_preds = []
             for val_batch in val_loader:
                 inputs, labels = val_batch
                 inputs = inputs.to(device)
@@ -230,6 +233,8 @@ def train(data_dir, model_dir, args):
                 acc_item = (labels == preds).sum().item()
                 val_loss_items.append(loss_item)
                 val_acc_items.append(acc_item)
+                all_labels.extend(labels.cpu().numpy())
+                all_preds.extend(preds.cpu().numpy())
 
                 if figure is None:
                     inputs_np = (
@@ -248,6 +253,7 @@ def train(data_dir, model_dir, args):
 
             val_loss = np.sum(val_loss_items) / len(val_loader)
             val_acc = np.sum(val_acc_items) / len(val_set)
+            val_f1 = f1_score(all_labels, all_preds, average='macro')
             best_val_loss = min(best_val_loss, val_loss)
 
             iteration_change_acc += 1
@@ -266,12 +272,14 @@ def train(data_dir, model_dir, args):
             )
             logger.add_scalar("Val/loss", val_loss, epoch)
             logger.add_scalar("Val/accuracy", val_acc, epoch)
+            logger.add_scalar("Val/f1_score", val_f1, epoch)
             logger.add_figure("results", figure, epoch)
             wandb.log({
                 "Train/loss": train_loss, 
                 "Train/accuracy": train_acc,
                 "Val/loss": val_loss, 
                 "Val/accuracy": val_acc,
+                "Val/f1_score": val_f1,
                 "results": wandb.Image(figure)
             }, step=epoch)
             print()
