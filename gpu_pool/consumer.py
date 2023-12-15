@@ -15,7 +15,7 @@ def consume_messages():
     start_subprocess('git config credential.helper \'cache --timeout=1036800\'')
     start_subprocess('git pull')
 
-    args_name = ['id', 'branch', 'name', 'seed', 'epoch', 'dataset', 'augmentation',
+    args_name = ['id', 'camper_id', 'branch', 'name', 'seed', 'epoch', 'dataset', 'augmentation',
                  'resize', 'batch_size', 'valid_batch_size', 'model', 'optimizer',
                  'lr', 'val_ratio', 'criterion', 'lr_decay_step', 'log_interval',
                  'patience', 'data_dir', 'model_dir'

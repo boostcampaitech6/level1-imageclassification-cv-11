@@ -13,6 +13,7 @@ def create_table():
     sqls = [
         '''create table IF NOT EXISTS message(
             id int(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            camper_id varchar(255),
             branch varchar(255),
             name varchar(255),
             seed varchar(255),
