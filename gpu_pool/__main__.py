@@ -1,11 +1,9 @@
 import argparse
 from utils import check_installation
 
-# python module check
 check_installation(kind='redis')
 check_installation(kind='pymysql')
     
-# 반드시 python module check 이후에
 import publisher
 import consumer
 

@@ -6,16 +6,11 @@ import mysql_query
 from utils import start_subprocess, check_installation
 
 redis_client = redis.Redis(host=env.PUBLISH_IP, port=env.PUBLISH_REDIS_PORT, db=0)
-# , health_check_interval = 59
 
 def consume_messages():
-    # Redis 연결 설정
-
-    # python module check
     check_installation('git')
     import git
 
-    # git 인증 캐싱
     start_subprocess('git config credential.helper cache')
     start_subprocess('git config credential.helper \'cache --timeout=1036800\'')
     start_subprocess('git pull')
@@ -26,17 +21,12 @@ def consume_messages():
                  'patience', 'data_dir', 'model_dir'
                  ]
 
-    # consumer 작업 실행
     print('consumer 작업 실행')
     while True:
         print('작업 새로고침')
-        # redis-server에 연결
         pubsub = redis_client.pubsub()
-
-        # 큐 구독
         pubsub.subscribe(env.QUEUE_NAME)
 
-        # 메시지 pop
         for message in pubsub.listen():
             if message and message['type'] =='subscribe':
                 continue

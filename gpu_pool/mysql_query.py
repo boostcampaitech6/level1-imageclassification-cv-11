@@ -1,7 +1,6 @@
 import pymysql 
 import env
 
-# 데이터베이스 생성
 def create_database():
     conn_no_db = pymysql.connect(host=env.PUBLISH_IP,port=env.PUBLISH_MYSQL_PORT, user=env.PUBLISH_MYSQL_USER, password=env.PUBLISH_MYSQL_PASSWORD, charset='utf8') 
     sql = 'create database IF NOT EXISTS ai_train;'
@@ -9,7 +8,6 @@ def create_database():
         with conn_no_db.cursor() as cur:
             cur.execute(sql)
 
-# 테이블 생성
 def create_table():
     conn = pymysql.connect(host=env.PUBLISH_IP,port=env.PUBLISH_MYSQL_PORT, user=env.PUBLISH_MYSQL_USER, password=env.PUBLISH_MYSQL_PASSWORD,db="ai_train", charset='utf8') 
     sqls = [
@@ -47,7 +45,6 @@ def create_table():
             for sql in sqls:
                 cur.execute(sql)
 
-# publisher에게 message 중 pushed가 0인 row들을 반환
 def select_publisher() -> list[tuple[any]]:
     conn = pymysql.connect(host=env.PUBLISH_IP,port=env.PUBLISH_MYSQL_PORT, user=env.PUBLISH_MYSQL_USER, password=env.PUBLISH_MYSQL_PASSWORD,db="ai_train", charset='utf8') 
     sql = 'SELECT id FROM message WHERE pushed != 1'
@@ -58,7 +55,6 @@ def select_publisher() -> list[tuple[any]]:
             result = cur.fetchall()   
     return result
     
-# consumer에게 message 중 id와 message_id가 일치하는 row를 반환
 def select_consumer(message_id: int) -> tuple[any]:
     conn = pymysql.connect(host=env.PUBLISH_IP,port=env.PUBLISH_MYSQL_PORT, user=env.PUBLISH_MYSQL_USER, password=env.PUBLISH_MYSQL_PASSWORD,db="ai_train", charset='utf8') 
     sql = f'SELECT * FROM message WHERE id = {message_id}'
@@ -69,7 +65,6 @@ def select_consumer(message_id: int) -> tuple[any]:
             result = cur.fetchone()   
     return result
 
-# 서버에 메시지 푸시
 def insert_message(json: dict) -> None:
     conn = pymysql.connect(host=env.PUBLISH_IP,port=env.PUBLISH_MYSQL_PORT, user=env.PUBLISH_MYSQL_USER, password=env.PUBLISH_MYSQL_PASSWORD,db="ai_train", charset='utf8') 
     keys = f'{tuple(json.keys())}'.replace('\'', '')
@@ -81,7 +76,6 @@ def insert_message(json: dict) -> None:
             cur.execute(sql)
         conn.commit()
 
-# publisher가 redis 큐에 담은 message의 message_id와 일치하는 row의 pushed를 1로 변경
 def update_message(message_id: int) -> None:
     conn = pymysql.connect(host=env.PUBLISH_IP,port=env.PUBLISH_MYSQL_PORT, user=env.PUBLISH_MYSQL_USER, password=env.PUBLISH_MYSQL_PASSWORD,db="ai_train", charset='utf8') 
 
@@ -91,7 +85,6 @@ def update_message(message_id: int) -> None:
             cur.execute(sql)
         conn.commit()
 
-# consumer가 train에 실패하면 해당 에러 로드와 message_id를 mysql db에 저장
 def insert_error_log(message_id:int, error_log:str) -> None:
     conn = pymysql.connect(host=env.PUBLISH_IP,port=env.PUBLISH_MYSQL_PORT, user=env.PUBLISH_MYSQL_USER, password=env.PUBLISH_MYSQL_PASSWORD,db="ai_train", charset='utf8') 
 
