@@ -7,6 +7,7 @@ import random
 import re
 from importlib import import_module
 from pathlib import Path
+import wandb
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -92,7 +93,8 @@ def increment_path(path, exist_ok=False):
 def train(data_dir, model_dir, args):
     seed_everything(args.seed)
 
-    save_dir = increment_path(os.path.join(model_dir, args.name))
+    save_dir = increment_path(os.path.join(model_dir, f"{args.camper_id}-{args.name}"))
+    wandb.run.name = save_dir
 
     # -- settings
     use_cuda = torch.cuda.is_available()
@@ -260,6 +262,13 @@ def train(data_dir, model_dir, args):
             logger.add_scalar("Val/loss", val_loss, epoch)
             logger.add_scalar("Val/accuracy", val_acc, epoch)
             logger.add_figure("results", figure, epoch)
+            wandb.log({
+                "Train/loss": train_loss, 
+                "Train/accuracy": train_acc,
+                "Val/loss": val_loss, 
+                "Val/accuracy": val_acc,
+                "results": wandb.Image(figure)
+            }, step=epoch)
             print()
 
         if iteration_change_acc == args.patience:
@@ -361,6 +370,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--name", default="exp", help="model save at model/{name}"
     )
+    parser.add_argument(
+        "--camper_id", default="T0000"
+    )
     
     args = parser.parse_args()
     print(args)
@@ -368,4 +380,6 @@ if __name__ == "__main__":
     data_dir = args.data_dir
     model_dir = args.model_dir
 
+    wandb.init(project="level1-imageclassification-cv-11", entity="cv-11", config=args)
     train(data_dir, model_dir, args)
+    wandb.finish()
