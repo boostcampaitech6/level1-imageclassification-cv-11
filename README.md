@@ -59,3 +59,9 @@ python inference.py --model BaseModel --model_dir ./model/exp
 ```
 tensorboard --logdir=save_dir
 ```
+
+#### WandB
+```
+pip install wandb
+wandb login
+```
