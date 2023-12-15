@@ -4,6 +4,7 @@ import json
 import multiprocessing
 import os
 import random
+import shutil
 import re
 from importlib import import_module
 from pathlib import Path
@@ -92,6 +93,10 @@ def increment_path(path, exist_ok=False):
 
 def train(data_dir, model_dir, args):
     seed_everything(args.seed)
+
+    for folder_name in os.listdir(args.model_dir):
+        subfolder_path = os.path.join(args.model_dir, folder_name)
+        shutil.rmtree(subfolder_path)
 
     save_dir = increment_path(os.path.join(model_dir, f"{args.camper_id}-{args.name}"))
     wandb.run.name = save_dir
