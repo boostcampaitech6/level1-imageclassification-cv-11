@@ -98,8 +98,8 @@ def train(data_dir, model_dir, args):
         subfolder_path = os.path.join(args.model_dir, folder_name)
         shutil.rmtree(subfolder_path)
 
+    wandb.run.name = f"{args.camper_id}-{args.name}"
     save_dir = increment_path(os.path.join(model_dir, f"{args.camper_id}-{args.name}"))
-    wandb.run.name = save_dir
 
     # -- settings
     use_cuda = torch.cuda.is_available()
