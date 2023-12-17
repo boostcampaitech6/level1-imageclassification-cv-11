@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
+import timm
+
 
 class BaseModel(nn.Module):
     """
@@ -77,3 +79,24 @@ class ResNetBasedModel(nn.Module):
         # 입력 데이터를 모델에 통과시킵니다.
         x = self.base_model(x)
         return x
+
+
+
+class CustomInceptionV3(nn.Module):
+    """
+    참고사항: 이미지 사이즈 299 x 299 적당함
+    """
+    def __init__(self, num_classes):
+        super(CustomInceptionV3, self).__init__()
+        # 사전 훈련된 InceptionV3 모델 불러오기
+        self.model = timm.create_model('inception_v3', pretrained=True)
+        
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        # 모델의 마지막 레이어 교체
+        self.model.fc = nn.Linear(self.model.fc.in_features, num_classes)
+
+
+    def forward(self, x):
+        return self.model(x)
