@@ -134,8 +134,9 @@ MESSAGE_FILE_DIR = './message.json'
 ```
 # ./message.json
 {
+  "camper_id": "name",
   "branch": "develop",   # or commit ex) e6084c6b
-  "name": "철수",
+  "name": "test_name",
   "seed": "42",
   "epoch": "1",
   "dataset": "MaskBaseDataset",
