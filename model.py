@@ -77,3 +77,23 @@ class ResNetBasedModel(nn.Module):
         # 입력 데이터를 모델에 통과시킵니다.
         x = self.base_model(x)
         return x
+
+
+class CustomVGGNet19(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+
+        self.model = models.vgg19(pretrained=True)
+
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        for param in self.model.classifier[6].parameters():
+            param.requires_grad = True
+
+        num_ftrs = self.model.classifier[6].in_features
+        self.model.classifier[6] = nn.Linear(num_ftrs, num_classes)
+
+    def forward(self, x):
+        x = self.model(x)
+        return x
