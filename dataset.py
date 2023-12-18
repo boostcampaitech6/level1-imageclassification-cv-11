@@ -15,8 +15,12 @@ from torchvision.transforms import (
     Compose,
     CenterCrop,
     ColorJitter,
+    Grayscale,
+    GaussianBlur,
+    RandomHorizontalFlip,
+    RandomRotation,
+    RandomCrop,
 )
-
 
 # 지원되는 이미지 확장자 리스트
 IMG_EXTENSIONS = [
@@ -56,7 +60,7 @@ class BaseAugmentation:
     def __init__(self, resize, mean, std, **args):
         """
         Args:
-            resize (tuple): 이미지의 리사이즈 대상 크기
+            resize (tuple): 이미지의 리사이즈 대상 크지
             mean (tuple): Normalize 변환을 위한 평균 값
             std (tuple): Normalize 변환을 위한 표준 값
         """
@@ -105,10 +109,102 @@ class CustomAugmentation:
             [
                 CenterCrop((320, 256)),
                 Resize(resize, Image.BILINEAR),
-                ColorJitter(0.1, 0.1, 0.1, 0.1),
+                GaussianBlur(kernel_size=(19, 19), sigma=(1.0, 2.0)),
+                RandomHorizontalFlip(0.5),
+                ColorJitter(contrast=(0.4, 0.8)),
                 ToTensor(),
                 Normalize(mean=mean, std=std),
                 AddGaussianNoise(),
+            ]
+        )
+
+    def __call__(self, image):
+        return self.transform(image)
+
+
+class CenterCrop_aug:
+    def __init__(self, resize, mean, std, **args):
+        self.transform = Compose(
+            [
+                CenterCrop((320, 256)),
+                Resize(resize, Image.BILINEAR),
+                ToTensor(),
+                Normalize(mean=mean, std=std),
+            ]
+        )
+
+    def __call__(self, image):
+        return self.transform(image)
+
+
+class GaussianBlur_aug:
+    def __init__(self, resize, mean, std, **args):
+        self.transform = Compose(
+            [
+                Resize(resize, Image.BILINEAR),
+                GaussianBlur(kernel_size=(19, 19), sigma=(1.0, 2.0)),
+                ToTensor(),
+                Normalize(mean=mean, std=std),
+            ]
+        )
+
+    def __call__(self, image):
+        return self.transform(image)
+
+
+class RandomHorizontalFlip_aug:
+    def __init__(self, resize, mean, std, **args):
+        self.transform = Compose(
+            [
+                Resize(resize, Image.BILINEAR),
+                RandomHorizontalFlip(0.5),
+                ToTensor(),
+                Normalize(mean=mean, std=std),
+            ]
+        )
+
+    def __call__(self, image):
+        return self.transform(image)
+
+
+class ColorJitter_aug:
+    def __init__(self, resize, mean, std, **args):
+        self.transform = Compose(
+            [
+                Resize(resize, Image.BILINEAR),
+                ColorJitter(0.1, 0.1, 0.1, 0.1),
+                ToTensor(),
+                Normalize(mean=mean, std=std),
+            ]
+        )
+
+    def __call__(self, image):
+        return self.transform(image)
+
+
+class RandomRotation_aug:
+    def __init__(self, resize, mean, std, **args):
+        self.transform = Compose(
+            [
+                Resize(resize, Image.BILINEAR),
+                RandomRotation(30),
+                ToTensor(),
+                Normalize(mean=mean, std=std),
+            ]
+        )
+
+    def __call__(self, image):
+        return self.transform(image)
+
+
+class RandomCrop_aug:
+    def __init__(self, resize, mean, std, **args):
+        self.transform = Compose(
+            [
+                RandomCrop((320, 256)),
+                Resize(resize, Image.BILINEAR),
+                ToTensor(),
+                Normalize(mean=mean, std=std),
             ]
         )
 
