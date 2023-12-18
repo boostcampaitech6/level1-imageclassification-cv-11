@@ -50,7 +50,7 @@ def consume_messages():
                     repo = git.Repo.init(path=env.CWD)
                     repo.remotes.origin.pull()
                     repo.git.checkout(branch)
-                    # repo.remotes.origin.pull()
+                    repo.remotes.origin.pull()
                     print(f'checkout {branch}')
 
                     args = ''
