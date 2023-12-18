@@ -120,6 +120,22 @@ class CustomAugmentation:
 
     def __call__(self, image):
         return self.transform(image)
+    
+class AddGaussianNoise_aug:
+    """커스텀 Augmentation을 담당하는 클래스"""
+
+    def __init__(self, resize, mean, std, **args):
+        self.transform = Compose(
+            [
+                Resize(resize, Image.BILINEAR),
+                ToTensor(),
+                Normalize(mean=mean, std=std),
+                AddGaussianNoise(),
+            ]
+        )
+
+    def __call__(self, image):
+        return self.transform(image)
 
 
 class CenterCrop_aug:
