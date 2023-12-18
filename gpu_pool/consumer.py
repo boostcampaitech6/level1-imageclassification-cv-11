@@ -38,34 +38,33 @@ def consume_messages():
             try:
                 if message and message['type'] == 'message':
                     message_id = json.loads(message['data'])
+                    if mysql_query.update_message(message_id):
+                        # 0:id, 1:branch, 2:name, 3:seed, 4:epoch, 5:dataset, 6:augmentation
+                        # 7:resize, 8:batch_size, 9:valid_batch_size, 10:model, 11:optimizer
+                        # 12:lr, 13:val_ratio, 14:criterion, 15:lr_decay_step, 16:log_interval
+                        # 17:patience, 18:data_dir, 19:model_dir
+                        args_value = mysql_query.select_consumer(message_id)
 
-                    mysql_query.update_message(message_id)
-                    # 0:id, 1:branch, 2:name, 3:seed, 4:epoch, 5:dataset, 6:augmentation
-                    # 7:resize, 8:batch_size, 9:valid_batch_size, 10:model, 11:optimizer
-                    # 12:lr, 13:val_ratio, 14:criterion, 15:lr_decay_step, 16:log_interval
-                    # 17:patience, 18:data_dir, 19:model_dir
-                    args_value = mysql_query.select_consumer(message_id)
+                        branch = args_value[branch_index]
+                        repo = git.Repo.init(path=env.CWD)
+                        repo.remotes.origin.pull()
+                        repo.git.checkout(branch)
+                        # repo.remotes.origin.pull()
+                        print(f'checkout {branch}')
 
-                    branch = args_value[branch_index]
-                    repo = git.Repo.init(path=env.CWD)
-                    repo.remotes.origin.pull()
-                    repo.git.checkout(branch)
-                    repo.remotes.origin.pull()
-                    print(f'checkout {branch}')
+                        args = ''
+                        for idx, name in enumerate(message_columns):
+                            if name in args_exception:
+                                continue
+                            args += f'--{name} {args_value[idx]} '
 
-                    args = ''
-                    for idx, name in enumerate(message_columns):
-                        if name in args_exception:
-                            continue
-                        args += f'--{name} {args_value[idx]} '
-
-                    print('학습 중')
-                    train = start_subprocess(f'python {env.CWD}/train.py {args}')
-                    if train.stderr and 'UserWarning: Argument \'interpolation\' of type int is deprecated since 0.13 and will be removed in 0.15' not in train.stderr:
-                        mysql_query.insert_error_log(message_id, train.stderr)
-                        print(f'학습 중 에러 발생. error_message에서 {message_id}를 참조바랍니다.')
-                    else:
-                        print('학습 완료')
+                        print('학습 중')
+                        train = start_subprocess(f'python {env.CWD}/train.py {args}')
+                        if train.stderr and 'UserWarning: Argument \'interpolation\' of type int is deprecated since 0.13 and will be removed in 0.15' not in train.stderr:
+                            mysql_query.insert_error_log(message_id, train.stderr)
+                            print(f'학습 중 에러 발생. error_message에서 {message_id}를 참조바랍니다.')
+                        else:
+                            print('학습 완료')
             except Exception as e:
                 mysql_query.insert_error_log(message_id, e)
                 print(f'에러 발생. error_message에서 {message_id}를 참조바랍니다.')
