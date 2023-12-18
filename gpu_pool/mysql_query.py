@@ -77,14 +77,27 @@ def insert_message(json: dict) -> None:
             cur.execute(sql)
         conn.commit()
 
-def update_message(message_id: int) -> None:
+def update_message(message_id: int) -> bool:
     conn = pymysql.connect(host=env.PUBLISH_IP,port=env.PUBLISH_MYSQL_PORT, user=env.PUBLISH_MYSQL_USER, password=env.PUBLISH_MYSQL_PASSWORD,db="ai_train", charset='utf8') 
 
-    sql = f'UPDATE message SET pushed = 1 WHERE id = {message_id}'
+    complete = False
+
+    sql_seclect = f'SELECT * FROM message WHERE id = {message_id} AND pushed = 0 FOR UPDATE;'
+    sql_update = f'UPDATE message SET pushed = 1 WHERE id = {message_id}'
     with conn:
         with conn.cursor() as cur:
-            cur.execute(sql)
-        conn.commit()
+            try:
+                conn.begin()
+                cur.execute(sql_seclect)
+                result = cur.fetchone()
+                if result and len(result) != 0:
+                    cur.execute(sql_update)
+                    complete = True
+                conn.commit()
+            except:
+                conn.rollback()
+                complete = False
+    return complete
 
 def insert_error_log(message_id:int, error_log:str) -> None:
     conn = pymysql.connect(host=env.PUBLISH_IP,port=env.PUBLISH_MYSQL_PORT, user=env.PUBLISH_MYSQL_USER, password=env.PUBLISH_MYSQL_PASSWORD,db="ai_train", charset='utf8') 
