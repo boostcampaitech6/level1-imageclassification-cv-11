@@ -87,11 +87,11 @@ def update_message(message_id: int) -> bool:
     with conn:
         with conn.cursor() as cur:
             try:
-                conn.start_transaction()
+                conn.begin()
                 cur.execute(sql_seclect)
                 result = cur.fetchone()
-                if len(result) != 0:
-                    cur.execute(sql_seclect)
+                if result and len(result) != 0:
+                    cur.execute(sql_update)
                     complete = True
                 conn.commit()
             except:
