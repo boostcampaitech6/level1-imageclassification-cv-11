@@ -94,6 +94,12 @@ class CustomInceptionV3(nn.Module):
         for param in self.model.parameters():
             param.requires_grad = False
 
+        params = list(self.model.parameters())
+
+        for param in params[-3:]:  #맨 뒤 3개
+            param.requires_grad = True
+        
+
         # 모델의 마지막 레이어 교체
         self.model.fc = nn.Linear(self.model.fc.in_features, num_classes)
 
