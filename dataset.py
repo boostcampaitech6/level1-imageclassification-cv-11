@@ -109,12 +109,10 @@ class CustomAugmentation:
             [
                 CenterCrop((320, 256)),
                 Resize(resize, Image.BILINEAR),
-                GaussianBlur(kernel_size=(19, 19), sigma=(1.0, 2.0)),
+                GaussianBlur(kernel_size=(3, 3), sigma=(1.0, 2.0)),
                 RandomHorizontalFlip(0.5),
-                ColorJitter(contrast=(0.4, 0.8)),
                 ToTensor(),
                 Normalize(mean=mean, std=std),
-                AddGaussianNoise(),
             ]
         )
 
@@ -158,7 +156,7 @@ class GaussianBlur_aug:
         self.transform = Compose(
             [
                 Resize(resize, Image.BILINEAR),
-                GaussianBlur(kernel_size=(19, 19), sigma=(1.0, 2.0)),
+                GaussianBlur(kernel_size=(3, 3), sigma=(1.0, 2.0)),
                 ToTensor(),
                 Normalize(mean=mean, std=std),
             ]
@@ -203,7 +201,7 @@ class RandomRotation_aug:
         self.transform = Compose(
             [
                 Resize(resize, Image.BILINEAR),
-                RandomRotation(30),
+                RandomRotation(10),
                 ToTensor(),
                 Normalize(mean=mean, std=std),
             ]
