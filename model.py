@@ -150,9 +150,14 @@ class CustomInceptionV3(nn.Module):
             self.model.AuxLogits.fc = nn.Linear(self.model.AuxLogits.fc.in_features, num_classes)
 
     def forward(self, x):
-        main_output, aux_output = self.model(x)
-        # 주 출력과 보조 출력을 결합
-        return main_output + 0.3 * aux_output
+        if self.training:
+            main_output, aux_output = self.model(x)
+            return main_output + 0.3 * aux_output
+        else:
+            # 평가 모드에서는 주 출력만 반환
+            main_output = self.model(x)
+            return main_output
+
 
 class CustomEfficientNetB4(nn.Module):
     def __init__(self, num_classes):
