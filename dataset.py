@@ -3,6 +3,7 @@ import random
 from collections import defaultdict
 from enum import Enum
 from typing import Tuple, List
+from randaugment import RandAugment
 
 import numpy as np
 import torch
@@ -115,6 +116,24 @@ class CustomAugmentation:
     def __call__(self, image):
         return self.transform(image)
 
+class CustomAugmentationT6180:
+    """커스텀 Augmentation을 담당하는 클래스"""
+
+    def __init__(self, resize, mean, std, **args):
+        self.transform = Compose(
+            [
+                CenterCrop((320, 256)),
+                Resize(resize, Image.BILINEAR),
+                ColorJitter(0.1, 0.1, 0.1, 0.1),
+                RandAugment(),
+                ToTensor(),
+                Normalize(mean=mean, std=std),
+                AddGaussianNoise(),
+            ]
+        )
+
+    def __call__(self, image):
+        return self.transform(image)
 
 class MaskLabels(int, Enum):
     """마스크 라벨을 나타내는 Enum 클래스"""
