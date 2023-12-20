@@ -194,32 +194,3 @@ class CustomViT(nn.Module):
 
     def forward(self, x):
         return self.model(x)
-    
-
-class CustomInceptionV3_NOAUX(nn.Module):
-    def __init__(self, num_classes):
-        super(CustomInceptionV3, self).__init__()
-        # 사전 훈련된 Inception V3 모델 불러오기
-        self.model = models.inception_v3(pretrained=True)
-
-        # 모든 레이어의 그라디언트 업데이트 비활성화
-        for param in self.model.parameters():
-            param.requires_grad = False
-
-        # 마지막 3개 레이어의 그라디언트 업데이트 활성화
-        for layer in [self.model.Mixed_7b, self.model.Mixed_7c, self.model.fc]:
-            for param in layer.parameters():
-                param.requires_grad = True
-
-        # 마지막 FC 레이어를 주어진 클래스 수에 맞게 교체
-        self.model.fc = nn.Linear(self.model.fc.in_features, num_classes)
-
-    def forward(self, x):
-    # Inception V3 모델의 출력이 (주 출력, 보조 출력) 튜플 형태인 경우와 그렇지 않은 경우를 처리
-        outputs = self.model(x)
-    # 훈련 모드에서는 주 출력과 보조 출력이 함께 반환되지만, 여기서는 주 출력만 사용
-        if self.training:
-            main_output, _ = outputs
-        else:
-            main_output = outputs
-        return main_output
