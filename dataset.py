@@ -549,7 +549,7 @@ class AgeRateProfileDataset(MaskBaseDataset):
         old = []
 
         for i, profile in enumerate(profiles):
-            age = profile.split('_')[-1]
+            age = int(profile.split('_')[-1])
             if age < 30:
                 young.append(i)
             elif age < 60:
