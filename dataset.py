@@ -456,7 +456,17 @@ class MaskBaseDataset(Dataset):
         train_set, val_set = random_split(self, [n_train, n_val])
         return train_set, val_set
 
+
+
+
+class AugmentationType(int, Enum):
+    NONE = -1
+    DOUBLE = 0
+    OLDAGE = 1
+    DOUBLE_OLDAGE = 2
+
 class AugEqualDataset(MaskBaseDataset):
+    agument_check = []
     class_labels = []
     class_dict = {0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[], 8:[],
         9:[], 10:[], 11:[], 12:[], 13:[], 14:[], 15:[], 16:[], 17:[]}
@@ -469,6 +479,34 @@ class AugEqualDataset(MaskBaseDataset):
         val_ratio=0.2,
     ):
         super().__init__(data_dir, mean, std, val_ratio)
+        resize = (299, 299)
+        self.aug_transform = [
+                Compose( # double
+                    [
+                        CenterCrop((320, 256)),
+                        Resize(resize, Image.BILINEAR),
+                        ToTensor(),
+                        Normalize(mean=mean, std=std),
+                    ]
+                ),
+                Compose( # oldage
+                    [
+                        Resize((299, 299), Image.BILINEAR),
+                        ColorJitter(0.5, 0.5, 0.5, 0.5),
+                        ToTensor(),
+                        Normalize(mean=mean, std=std),
+                    ]
+                ),
+                Compose( # double_oldage
+                    [
+                        CenterCrop((320, 256)),
+                        Resize((299, 299), Image.BILINEAR),
+                        ColorJitter(0.5, 0.5, 0.5, 0.5),
+                        ToTensor(),
+                        Normalize(mean=mean, std=std),
+                    ]
+                )
+            ]
     
     def setup(self):
         profiles = os.listdir(self.data_dir)
@@ -493,14 +531,50 @@ class AugEqualDataset(MaskBaseDataset):
                 gender_label = GenderLabels.from_str(gender)
                 age_label = AgeLabels.from_number(age)
 
-                self.image_paths.append(img_path)
-                self.mask_labels.append(mask_label)
-                self.gender_labels.append(gender_label)
-                self.age_labels.append(age_label)
-                self.class_labels.append(self.encode_multi_class(mask_label, gender_label, age_label))
+                class_label = self.encode_multi_class(mask_label, gender_label, age_label)
+
+                for aug_type in range(-1, 1):
+                    self.agument_check.append(AugmentationType(aug_type))
+                    self.image_paths.append(img_path)
+                    self.mask_labels.append(mask_label)
+                    self.gender_labels.append(gender_label)
+                    self.age_labels.append(age_label)
+                    self.class_labels.append(class_label)
+                    
+                if age_label == AgeLabels.OLD:
+                    for _ in range(5):
+                        for aug_type_age in range(1, 3):
+                            self.agument_check.append(AugmentationType(aug_type_age))
+                            self.image_paths.append(img_path)
+                            self.mask_labels.append(mask_label)
+                            self.gender_labels.append(gender_label)
+                            self.age_labels.append(age_label)
+                            self.class_labels.append(class_label)
 
         for i, c in enumerate(self.class_labels):
             self.class_dict[c].append(i)
+
+    def get_old_age_agument(self, index) -> AugmentationType:
+        return self.agument_check[index]
+
+    def __getitem__(self, index):
+        """인덱스에 해당하는 데이터를 가져오는 메서드"""
+        assert self.transform is not None, ".set_tranform 메소드를 이용하여 transform 을 주입해주세요"
+
+        image = self.read_image(index)
+        mask_label = self.get_mask_label(index)
+        gender_label = self.get_gender_label(index)
+        age_label = self.get_age_label(index)
+        multi_class_label = self.encode_multi_class(mask_label, gender_label, age_label)
+
+        old_age_agument = self.get_old_age_agument(index)
+        
+        if old_age_agument != AugmentationType.NONE:
+            image_transform = self.aug_transform[old_age_agument](image)
+        else:
+            image_transform = self.transform(image)
+
+        return image_transform, multi_class_label
     
     def split_dataset(self) -> Tuple[Subset, Subset]:
         min_cnt = Counter(self.class_labels).most_common()[-1][1]
