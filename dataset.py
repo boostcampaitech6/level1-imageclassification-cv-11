@@ -147,7 +147,6 @@ class CustomAugmentationT6180:
     def __init__(self, resize, mean, std, **args):
         self.transform = Compose(
             [
-                CenterCrop((320, 256)),
                 Resize(resize, Image.BILINEAR),
                 ColorJitter(0.1, 0.1, 0.1, 0.1),
                 RandAugment(),
