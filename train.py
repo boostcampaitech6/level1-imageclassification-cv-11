@@ -21,6 +21,27 @@ from sklearn.metrics import f1_score
 from dataset import MaskBaseDataset
 from loss import create_criterion
 
+classes = {
+    0: [0, 0, 0],
+    1: [0, 0, 1],
+    2: [0, 0, 2],
+    3: [0, 1, 0],
+    4: [0, 1, 1],
+    5: [0, 1, 2],
+    6: [1, 0, 0],
+    7: [1, 0, 1],
+    8: [1, 0, 2],
+    9: [1, 1, 0],
+    10: [1, 1, 1],
+    11: [1, 1, 2],
+    12: [2, 0, 0],
+    13: [2, 0, 1],
+    14: [2, 0, 2],
+    15: [2, 1, 0],
+    16: [2, 1, 1],
+    17: [2, 1, 2],
+}
+
 
 def seed_everything(seed):
     torch.manual_seed(seed)
@@ -177,15 +198,61 @@ def train(data_dir, model_dir, args):
         loss_value = 0
         matches = 0
         for idx, train_batch in enumerate(train_loader):
-            inputs, labels = train_batch
-            inputs = inputs.to(device)
-            labels = labels.to(device)
+            loss = 0
+            preds = 0
+            if args.dataset in [
+                "MaskMultiLabelDataset",
+                "MultiLabelSplitByProfileDataset",
+            ]:
+                inputs, mask_labels, gender_labels, age_labels = train_batch
+                inputs = inputs.to(device)
+                mask_labels = mask_labels.to(device)
+                gender_labels = gender_labels.to(device)
+                age_labels = age_labels.to(device)
+                labels = torch.Tensor(
+                    [
+                        [
+                            k
+                            for k, v in classes.items()
+                            if v == [mask_labels[i], gender_labels[i], age_labels[i]]
+                        ]
+                        for i in range(args.batch_size)
+                    ]
+                )
+                optimizer.zero_grad()
+                outs = model(inputs)
+                mask_outs, gender_outs, age_outs = torch.split(outs, [3, 2, 3], dim=1)
+                mask_preds, gender_preds, age_preds = (
+                    torch.argmax(mask_outs, dim=-1),
+                    torch.argmax(gender_outs, dim=-1),
+                    torch.argmax(age_outs, dim=-1),
+                )
+                preds = torch.Tensor(
+                    [
+                        [
+                            k
+                            for k, v in classes.items()
+                            if v == [mask_preds[i], gender_preds[i], age_preds[i]]
+                        ]
+                        for i in range(args.batch_size)
+                    ]
+                )
 
-            optimizer.zero_grad()
+                mask_loss = criterion(mask_outs, mask_labels)
+                gender_loss = criterion(gender_outs, gender_labels)
+                age_loss = criterion(age_outs, age_labels)
 
-            outs = model(inputs)
-            preds = torch.argmax(outs, dim=-1)
-            loss = criterion(outs, labels)
+                loss = mask_loss + gender_loss + age_loss
+            else:
+                inputs, labels = train_batch
+                inputs = inputs.to(device)
+                labels = labels.to(device)
+
+                optimizer.zero_grad()
+
+                outs = model(inputs)
+                preds = torch.argmax(outs, dim=-1)
+                loss = criterion(outs, labels)
 
             loss.backward()
             optimizer.step()
@@ -222,14 +289,63 @@ def train(data_dir, model_dir, args):
             all_labels = []
             all_preds = []
             for val_batch in val_loader:
-                inputs, labels = val_batch
-                inputs = inputs.to(device)
-                labels = labels.to(device)
+                loss_item = 0
+                preds = 0
+                if args.dataset in [
+                    "MaskMultiLabelDataset",
+                    "MultiLabelSplitByProfileDataset",
+                ]:
+                    inputs, mask_labels, gender_labels, age_labels = val_batch
+                    inputs = inputs.to(device)
+                    mask_labels = mask_labels.to(device)
+                    gender_labels = gender_labels.to(device)
+                    age_labels = age_labels.to(device)
+                    labels = torch.Tensor(
+                        [
+                            [
+                                k
+                                for k, v in classes.items()
+                                if v
+                                == [mask_labels[i], gender_labels[i], age_labels[i]]
+                            ]
+                            for i in range(args.valid_batch_size)
+                        ]
+                    )
+                    outs = model(inputs)
+                    mask_outs, gender_outs, age_outs = torch.split(
+                        outs, [3, 2, 3], dim=1
+                    )
+                    mask_preds, gender_preds, age_preds = (
+                        torch.argmax(mask_outs, dim=-1),
+                        torch.argmax(gender_outs, dim=-1),
+                        torch.argmax(age_outs, dim=-1),
+                    )
+                    preds = torch.Tensor(
+                        [
+                            [
+                                k
+                                for k, v in classes.items()
+                                if v == [mask_preds[i], gender_preds[i], age_preds[i]]
+                            ]
+                            for i in range(args.valid_batch_size)
+                        ]
+                    )
 
-                outs = model(inputs)
-                preds = torch.argmax(outs, dim=-1)
+                    mask_loss_item = criterion(mask_outs, mask_labels).item()
+                    gender_loss_item = criterion(gender_outs, gender_labels).item()
+                    age_loss_item = criterion(age_outs, age_labels).item()
 
-                loss_item = criterion(outs, labels).item()
+                    loss_item = mask_loss_item + gender_loss_item + age_loss_item
+                else:
+                    inputs, labels = val_batch
+                    inputs = inputs.to(device)
+                    labels = labels.to(device)
+
+                    outs = model(inputs)
+                    preds = torch.argmax(outs, dim=-1)
+
+                    loss_item = criterion(outs, labels).item()
+                    
                 acc_item = (labels == preds).sum().item()
                 val_loss_items.append(loss_item)
                 val_acc_items.append(acc_item)
