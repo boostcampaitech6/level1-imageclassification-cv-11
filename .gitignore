@@ -3,3 +3,4 @@ model/
 output/
 __pycache__/
 .cache/
+wandb/
