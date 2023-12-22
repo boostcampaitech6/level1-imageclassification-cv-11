@@ -14,9 +14,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch.optim.lr_scheduler import StepLR
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, WeightedRandomSampler
 from torch.utils.tensorboard import SummaryWriter
 from sklearn.metrics import f1_score
+from collections import Counter
+
 
 from dataset import MaskBaseDataset
 from loss import create_criterion
@@ -57,6 +59,20 @@ def get_lr(optimizer):
     for param_group in optimizer.param_groups:
         return param_group["lr"]
 
+def getTrainWeightedSampler(train_dataset):
+    train_set, _ = train_dataset.split_dataset()
+    
+    _, multi_class_labels = train_dataset.target_class_distribution()
+    multi_class_labels = np.array(multi_class_labels)
+    train_set_y = multi_class_labels[train_set.indices]
+    target_dist = Counter(train_set_y)
+    
+    sort_target_dist = sorted(target_dist.items(), key = lambda x:x[0])
+    num_samples = len(train_set_y)
+    class_weights = [num_samples / sort_target_dist[i][1] for i in range(len(sort_target_dist))]
+
+    weights = [class_weights[train_set_y[i]] for i in range(int(num_samples))]
+    return WeightedRandomSampler(torch.DoubleTensor(weights), int(num_samples))
 
 def grid_image(np_images, gts, preds, n=16, shuffle=False):
     batch_size = np_images.shape[0]
